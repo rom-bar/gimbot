@@ -12,6 +12,7 @@ import { createMazeMuncher, meta as mazeMuncherMeta } from './games/maze-muncher
 import { createRoadHopper, meta as roadHopperMeta } from './games/road-hopper';
 import { createSlidingTiles, meta as slidingTilesMeta } from './games/sliding-tiles';
 import { createLightsOut, meta as lightsOutMeta } from './games/lights-out';
+import { createMemoryMatch, meta as memoryMatchMeta } from './games/memory-match';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -27,4 +28,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: roadHopperMeta, create: createRoadHopper },
   { meta: slidingTilesMeta, create: createSlidingTiles },
   { meta: lightsOutMeta, create: createLightsOut },
+  { meta: memoryMatchMeta, create: createMemoryMatch },
 ];
