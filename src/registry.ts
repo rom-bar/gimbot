@@ -8,6 +8,7 @@ import { createPaddleDuel, meta as paddleDuelMeta } from './games/paddle-duel';
 import { createBrickRunner, meta as brickRunnerMeta } from './games/brick-runner';
 import { createRockBlaster, meta as rockBlasterMeta } from './games/rock-blaster';
 import { createStarDefender, meta as starDefenderMeta } from './games/star-defender';
+import { createMazeMuncher, meta as mazeMuncherMeta } from './games/maze-muncher';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -19,4 +20,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: brickRunnerMeta, create: createBrickRunner },
   { meta: rockBlasterMeta, create: createRockBlaster },
   { meta: starDefenderMeta, create: createStarDefender },
+  { meta: mazeMuncherMeta, create: createMazeMuncher },
 ];
