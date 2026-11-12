@@ -17,6 +17,7 @@ import { createThreeInARow, meta as threeInARowMeta } from './games/three-in-a-r
 import { createDiskReversal, meta as diskReversalMeta } from './games/disk-reversal';
 import { createCheckers, meta as checkersMeta } from './games/checkers';
 import { createWordGuess, meta as wordGuessMeta } from './games/word-guess';
+import { createCardSolitaire, meta as cardSolitaireMeta } from './games/card-solitaire';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -37,4 +38,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: diskReversalMeta, create: createDiskReversal },
   { meta: checkersMeta, create: createCheckers },
   { meta: wordGuessMeta, create: createWordGuess },
+  { meta: cardSolitaireMeta, create: createCardSolitaire },
 ];
