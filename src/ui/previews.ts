@@ -80,13 +80,34 @@ function background(context: CanvasRenderingContext2D): void {
   }
 }
 
+function generatedPreview(context: CanvasRenderingContext2D, id: string): void {
+  background(context);
+  const seed = [...id].reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  const hue = seed % 360;
+  for (let row = 0; row < 4; row += 1) {
+    for (let column = 0; column < 4; column += 1) {
+      const bit = (seed >> ((row * 4 + column) % 12)) & 1;
+      if (!bit && (row + column) % 3 !== 0) continue;
+      context.fillStyle = `hsl(${(hue + row * 28 + column * 9) % 360} 88% ${bit ? 64 : 44}%)`;
+      context.fillRect(17 + column * 12, 15 + row * 11, 8, 7);
+    }
+  }
+  const initials = id.split('-').map((part) => part[0] ?? '').join('').slice(0, 3).toUpperCase();
+  context.fillStyle = '#fff7e8';
+  context.font = 'bold 10px ui-monospace, monospace';
+  context.textAlign = 'center';
+  context.fillText(initials, 40, 71);
+}
+
 export function drawGamePreviews(scope: ParentNode = document): void {
   scope.querySelectorAll<HTMLCanvasElement>('[data-preview]').forEach((canvas) => {
     const context = canvas.getContext('2d');
-    const paint = painters[canvas.dataset.preview ?? ''];
-    if (!context || !paint) return;
+    const id = canvas.dataset.preview ?? '';
+    if (!context) return;
     canvas.width = 80;
     canvas.height = 80;
-    paint(context);
+    const paint = painters[id];
+    if (paint) paint(context);
+    else generatedPreview(context, id);
   });
 }
