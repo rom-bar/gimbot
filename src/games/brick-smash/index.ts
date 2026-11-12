@@ -20,6 +20,7 @@ export const meta: GameMeta = {
   description: 'Guide the neon ball through six rows of shifting color.',
   controls: 'Move the paddle with the arrows or WASD, then press A or Space to launch.',
   accent: '#ff4fd8',
+  touchControls: { dpad: ['left', 'right'], buttons: ['action'], labels: {action: 'Launch'}, gestures: false },
 };
 
 interface Brick {

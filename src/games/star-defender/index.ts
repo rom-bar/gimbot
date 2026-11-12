@@ -19,6 +19,7 @@ export const meta: GameMeta = {
   description: 'Defend the lower sky, clear descending formations, and survive every wave.',
   controls: 'Move with arrows or WASD · press A or Space to fire',
   accent: '#64e7ff',
+  touchControls: { dpad: ['left', 'right'], buttons: ['action'], labels: {action: 'Fire'}, gestures: false },
 };
 
 interface Enemy {

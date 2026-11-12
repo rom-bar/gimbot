@@ -20,6 +20,7 @@ export const meta: GameMeta = {
   description: 'A hot-seat strategy duel on an eight-by-eight board.',
   controls: 'Arrows move the cursor. Action selects or moves a piece. Tap a square to play.',
   accent: '#ffcf70',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Select'}, gestures: false },
 };
 
 function playerOf(piece: Piece): 1 | 2 | 0 {

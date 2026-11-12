@@ -1,6 +1,19 @@
 import type { AudioApi, Game, GameContext, GameEntry, GameStatus, ScoreApi, StorageApi } from '../games/types';
 import { FixedGameLoop } from '../core/loop';
 import { InputManager } from '../core/input';
+import { TouchControls } from '../platform/touch-controls';
+
+declare global {
+  interface Window {
+    __game?: {
+      getState(): Record<string, unknown>;
+      setSeed(seed: number): void;
+      setStatus(status: GameStatus): void;
+      pause(): void;
+      step(dt?: number): void;
+    };
+  }
+}
 
 interface GameController {
   destroy(): void;
@@ -23,6 +36,7 @@ export function renderGamePage(entry: GameEntry, storage: StorageApi): string {
           <div class="score-cell"><span>Personal best</span><strong id="best-score">${storage.getBestScore(meta.id)}</strong></div>
         </div>
         <div class="game-actions">
+          <button class="game-action-button settings-button" id="open-settings" type="button" data-testid="open-settings">Controls</button>
           <button class="game-action-button" id="pause-game" type="button" disabled>Pause</button>
           <button class="game-action-button restart-button" id="restart-game" type="button">Restart</button>
         </div>
@@ -34,19 +48,8 @@ export function renderGamePage(entry: GameEntry, storage: StorageApi): string {
         </div>
         <aside class="game-side-panel">
           <div class="how-to-play"><span class="panel-mark" aria-hidden="true">✳</span><h2>How to play</h2><p>${meta.controls}</p><div class="key-hint"><span class="key-cap">↑</span><span class="key-cap">←</span><span class="key-cap">↓</span><span class="key-cap">→</span><span class="key-text">or WASD</span></div><p class="side-hint">Space or A to act · P or Esc to pause</p></div>
-          <div class="touch-controls" aria-label="Touch game controls">
-            <div class="touch-pad" role="group" aria-label="Directional controls">
-              <button type="button" data-control="up" aria-label="Move up" class="pad-up">↑</button>
-              <button type="button" data-control="left" aria-label="Move left" class="pad-left">←</button>
-              <button type="button" data-control="down" aria-label="Move down" class="pad-down">↓</button>
-              <button type="button" data-control="right" aria-label="Move right" class="pad-right">→</button>
-            </div>
-            <div class="touch-actions" role="group" aria-label="Action controls">
-              <button type="button" data-control="secondary" aria-label="Secondary action" class="touch-button touch-b">B</button>
-              <button type="button" data-control="action" aria-label="Action" class="touch-button touch-a">A</button>
-            </div>
-          </div>
-          <p class="mobile-help">Tap the screen or use the buttons to play.</p>
+          <div class="touch-controls" id="touch-controls" data-testid="touch-controls" role="group" aria-label="Touch game controls"></div>
+          <p class="mobile-help" id="mobile-help">Tap the screen or use the buttons to play.</p>
         </aside>
       </div>
     </section>`;
@@ -65,7 +68,11 @@ export function mountGame(
   const bestElement = root.querySelector<HTMLElement>('#best-score');
   const pauseButton = root.querySelector<HTMLButtonElement>('#pause-game');
   const restartButton = root.querySelector<HTMLButtonElement>('#restart-game');
-  if (!canvas || !overlay || !scoreElement || !bestElement || !pauseButton || !restartButton) {
+  const controlsHost = root.querySelector<HTMLElement>('#touch-controls');
+  const stage = root.querySelector<HTMLElement>('#game-stage');
+  const settingsButton = root.querySelector<HTMLButtonElement>('#open-settings');
+  const helpHint = root.querySelector<HTMLElement>('#mobile-help');
+  if (!canvas || !overlay || !scoreElement || !bestElement || !pauseButton || !restartButton || !controlsHost || !stage || !settingsButton || !helpHint) {
     throw new Error('The game shell is incomplete.');
   }
 
@@ -75,6 +82,11 @@ export function mountGame(
   let pausedFrom: GameStatus = 'playing';
   let currentScore = 0;
   let destroyed = false;
+
+  const dismissHelp = (): void => {
+    storage.setBoolean('touch-hint-dismissed', true);
+    helpHint!.hidden = true;
+  };
 
   const score: ScoreApi = {
     current: () => currentScore,
@@ -132,6 +144,15 @@ export function mountGame(
     game = entry.create();
     game.init(canvas!, createContext());
     showStatus();
+    if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_HOOKS === 'true') {
+      window.__game = {
+        getState: () => ({ id: entry.meta.id, status, score: currentScore, input: input.snapshot(), game: game?.getDebugState?.() ?? null }),
+        setSeed: (seed) => game?.setSeed?.(seed),
+        setStatus: (next) => setStatus(next),
+        pause: () => pause(),
+        step: (dt = 1 / 60) => { game?.update(dt); input.finishFrame(); },
+      };
+    }
     loop = new FixedGameLoop(game, input, () => status);
     loop.start();
   }
@@ -168,19 +189,9 @@ export function mountGame(
   input.setShortcuts(togglePause, restart);
   pauseButton.addEventListener('click', togglePause);
   restartButton.addEventListener('click', restart);
-  root.querySelectorAll<HTMLButtonElement>('[data-control]').forEach((button) => {
-    const control = button.dataset.control as 'up' | 'down' | 'left' | 'right' | 'action' | 'secondary';
-    const press = (event: PointerEvent): void => {
-      event.preventDefault();
-      input.setButton(control, true);
-      button.setPointerCapture?.(event.pointerId);
-    };
-    const release = (): void => input.setButton(control, false);
-    button.addEventListener('pointerdown', press);
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
-    button.addEventListener('lostpointercapture', release);
-  });
+  const controls = new TouchControls({ host: controlsHost, stage, root, input, meta: entry.meta, storage, onFirstInput: dismissHelp });
+  settingsButton.setAttribute('aria-haspopup', 'dialog');
+  helpHint.hidden = storage.getBoolean('touch-hint-dismissed', false);
 
   startInstance();
 
@@ -190,8 +201,10 @@ export function mountGame(
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      controls.destroy();
       loop?.stop();
       game?.destroy();
+      if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_HOOKS === 'true') delete window.__game;
       input.setShortcuts(() => undefined, () => undefined);
       input.destroy();
     },

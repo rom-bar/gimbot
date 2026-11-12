@@ -15,6 +15,7 @@ export const mineSweepMeta: GameMeta = {
   description: 'Clear the grid. Mark hazards. Trust your first move.',
   controls: 'Open safe cells, or hold a cell to mark a hazard.',
   accent: '#ff4fd8',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action', 'secondary'], labels: {action: 'Reveal', secondary: 'Flag'}, gestures: false },
 };
 
 export class MineSweepGame implements Game {

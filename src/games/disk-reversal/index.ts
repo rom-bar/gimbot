@@ -18,6 +18,7 @@ export const meta: GameMeta = {
   description: 'Claim the board by surrounding and reversing your rival’s disks.',
   controls: 'Arrows move the marker. Action places a disk. You can also tap a square.',
   accent: '#f4c95d',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Place'}, gestures: false },
 };
 
 function startingBoard(): number[][] {

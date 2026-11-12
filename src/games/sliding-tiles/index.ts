@@ -33,6 +33,7 @@ export const meta: GameMeta = {
   description: 'Arrange the numbered tiles in order using the single open space.',
   controls: 'Use arrows or WASD to move an adjacent tile. Tap a tile to slide it.',
   accent: '#f4c95d',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Start'}, gestures: false },
 };
 
 type Direction = 'up' | 'down' | 'left' | 'right';

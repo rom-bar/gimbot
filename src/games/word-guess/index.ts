@@ -12,6 +12,7 @@ export const meta: GameMeta = {
   description: 'Reveal a hidden word one letter at a time.',
   controls: 'Tap a letter or press A–Z. Press the action button to start.',
   accent: '#f2c14e',
+  touchControls: { dpad: [], buttons: ['action'], labels: {action: 'Start'}, gestures: false },
 };
 
 export class WordGuessGame implements Game {

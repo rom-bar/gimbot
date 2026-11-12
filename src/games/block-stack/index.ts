@@ -31,6 +31,7 @@ export const meta: GameMeta = {
   description: 'Fit falling shapes, clear lines, and keep the stack low.',
   controls: 'Rotate and guide each shape into place. Clear lines to build your score.',
   accent: '#53e0c2',
+  touchControls: { dpad: ['left', 'right', 'down'], buttons: ['action', 'secondary', 'hold'], optionalButtons: ['hold'], labels: {action: 'Rotate', secondary: 'Hard drop', hold: 'Hold'}, gestures: true, hardDropOnFlick: true },
 };
 
 export class BlockStackGame implements Game {
@@ -41,9 +42,15 @@ export class BlockStackGame implements Game {
   private board = blankBoard();
   private piece: number[][] | null = null;
   private pieceColor = 0;
+  private nextShapeIndex = 0;
+  private heldShapeIndex: number | null = null;
+  private holdUsed = false;
+  private rngState = 1;
   private pieceX = 0;
   private pieceY = 0;
   private dropTimer = 0;
+  private lockTimer = 0;
+  private lockResets = 0;
   private lines = 0;
   private started = false;
 
@@ -71,12 +78,19 @@ export class BlockStackGame implements Game {
     if (input.pressed('right')) this.move(1);
     if (input.pressed('action')) this.rotate();
     if (input.pressed('secondary')) this.hardDrop();
+    if (input.pressed('hold') && this.context?.storage.getBoolean('touch:hold-piece', false)) this.holdPiece();
 
     this.dropTimer += dt * (input.down('down') ? 8 : 1);
     const interval = Math.max(0.08, 0.65 - (this.level - 1) * 0.05);
     while (this.dropTimer >= interval) {
       this.dropTimer -= interval;
       if (!this.stepDown()) break;
+    }
+    if (this.piece && this.collides(this.piece, this.pieceX, this.pieceY + 1)) {
+      this.lockTimer += dt;
+      if (this.lockTimer >= 0.4) this.lockPiece();
+    } else {
+      this.lockTimer = 0;
     }
   }
 
@@ -88,6 +102,7 @@ export class BlockStackGame implements Game {
     ctx.fillStyle = '#100d20';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     this.drawBoard(ctx);
+    this.drawGhost(ctx);
     this.drawPiece(ctx);
     ctx.fillStyle = '#302747';
     ctx.font = '700 14px monospace';
@@ -103,9 +118,16 @@ export class BlockStackGame implements Game {
     ctx.fillText(String(this.level), 358, 188);
     ctx.fillStyle = '#6d6085';
     ctx.font = '12px monospace';
-    ctx.fillText('← → MOVE', 358, 282);
-    ctx.fillText('↑ TURN', 358, 302);
-    ctx.fillText('B DROP', 358, 322);
+    ctx.fillText('← → MOVE', 358, 254);
+    ctx.fillText('A ROTATE', 358, 274);
+    ctx.fillText('B DROP', 358, 294);
+    this.drawPreview(ctx, 'NEXT', this.nextShapeIndex, 358, 360);
+    if (this.context?.storage.getBoolean('touch:hold-piece', false)) {
+      this.drawPreview(ctx, 'HOLD', this.heldShapeIndex, 358, 478);
+      ctx.fillStyle = this.holdUsed ? '#514361' : '#6d6085';
+      ctx.font = '11px monospace';
+      ctx.fillText('C / H', 358, 548);
+    }
   }
 
   pause(): void {}
@@ -118,6 +140,25 @@ export class BlockStackGame implements Game {
     this.piece = null;
   }
 
+  getDebugState(): Record<string, unknown> {
+    return {
+      pieceX: this.pieceX,
+      pieceY: this.pieceY,
+      piece: this.piece?.map((row) => [...row]) ?? null,
+      ghostY: this.ghostY(),
+      nextShapeIndex: this.nextShapeIndex,
+      heldShapeIndex: this.heldShapeIndex,
+      holdUsed: this.holdUsed,
+      lines: this.lines,
+      board: this.board.map((row) => [...row]),
+    };
+  }
+
+  setSeed(seed: number): void {
+    this.rngState = seed >>> 0 || 1;
+    this.nextShapeIndex = this.randomIndex();
+  }
+
   private get level(): number {
     return Math.floor(this.lines / 10) + 1;
   }
@@ -128,18 +169,27 @@ export class BlockStackGame implements Game {
     this.pieceX = 0;
     this.pieceY = 0;
     this.pieceColor = 0;
+    this.nextShapeIndex = this.randomIndex();
+    this.heldShapeIndex = null;
+    this.holdUsed = false;
     this.dropTimer = 0;
+    this.lockTimer = 0;
+    this.lockResets = 0;
     this.lines = 0;
     this.started = false;
   }
 
   private spawn(): void {
-    const index = Math.floor(Math.random() * SHAPES.length);
+    const index = this.nextShapeIndex;
+    this.nextShapeIndex = this.randomIndex();
     this.pieceColor = index;
     this.piece = copyMatrix(SHAPES[index]);
     this.pieceX = Math.floor((WIDTH - this.piece[0].length) / 2);
     this.pieceY = 0;
     this.dropTimer = 0;
+    this.lockTimer = 0;
+    this.lockResets = 0;
+    this.holdUsed = false;
     if (this.collides(this.piece, this.pieceX, this.pieceY)) {
       this.context?.setStatus('over');
       this.context?.audio.tone(110, 240, 'sawtooth', 0.06);
@@ -160,6 +210,7 @@ export class BlockStackGame implements Game {
     if (!this.piece) return;
     if (!this.collides(this.piece, this.pieceX + direction, this.pieceY)) {
       this.pieceX += direction;
+      this.resetLockDelay();
       this.context?.audio.tone(250, 25, 'square', 0.025);
     }
   }
@@ -171,6 +222,7 @@ export class BlockStackGame implements Game {
       if (!this.collides(rotated, this.pieceX + offset, this.pieceY)) {
         this.piece = rotated;
         this.pieceX += offset;
+        this.resetLockDelay();
         this.context?.audio.tone(520, 55, 'square', 0.04);
         return;
       }
@@ -181,9 +233,9 @@ export class BlockStackGame implements Game {
     if (!this.piece) return false;
     if (!this.collides(this.piece, this.pieceX, this.pieceY + 1)) {
       this.pieceY += 1;
+      this.lockTimer = 0;
       return true;
     }
-    this.lockPiece();
     return false;
   }
 
@@ -196,6 +248,79 @@ export class BlockStackGame implements Game {
     }
     if (distance > 0) this.context?.audio.tone(180, 45, 'square', 0.04);
     this.lockPiece();
+  }
+
+  private holdPiece(): void {
+    if (!this.piece || this.holdUsed) return;
+    const current = this.pieceColor;
+    if (this.heldShapeIndex === null) {
+      this.heldShapeIndex = current;
+      this.spawn();
+    } else {
+      const replacement = this.heldShapeIndex;
+      this.heldShapeIndex = current;
+      this.pieceColor = replacement;
+      this.piece = copyMatrix(SHAPES[replacement]);
+      this.pieceX = Math.floor((WIDTH - this.piece[0].length) / 2);
+      this.pieceY = 0;
+      this.dropTimer = 0;
+      this.lockTimer = 0;
+      this.lockResets = 0;
+      this.holdUsed = false;
+    }
+    this.holdUsed = true;
+  }
+
+  private resetLockDelay(): void {
+    if (this.lockResets >= 15) return;
+    this.lockTimer = 0;
+    this.lockResets += 1;
+  }
+
+  private ghostY(): number {
+    if (!this.piece) return this.pieceY;
+    let y = this.pieceY;
+    while (!this.collides(this.piece, this.pieceX, y + 1)) y += 1;
+    return y;
+  }
+
+  private drawGhost(ctx: CanvasRenderingContext2D): void {
+    if (!this.piece) return;
+    const y = this.ghostY();
+    if (y <= this.pieceY) return;
+    this.piece.forEach((row, rowIndex) => row.forEach((cell, columnIndex) => {
+      if (!cell) return;
+      const x = BOARD_X + (this.pieceX + columnIndex) * CELL;
+      const py = BOARD_Y + (y + rowIndex) * CELL;
+      ctx.strokeStyle = `${COLORS[this.pieceColor]}88`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 4, py + 4, CELL - 8, CELL - 8);
+    }));
+  }
+
+  private drawPreview(ctx: CanvasRenderingContext2D, label: string, index: number | null, x: number, y: number): void {
+    ctx.fillStyle = '#6d6085';
+    ctx.font = '700 12px monospace';
+    ctx.fillText(label, x, y);
+    if (index === null) return;
+    const shape = SHAPES[index];
+    const cell = 15;
+    const left = x + (92 - shape[0].length * cell) / 2;
+    const top = y + 12;
+    shape.forEach((row, rowIndex) => row.forEach((occupied, columnIndex) => {
+      if (!occupied) return;
+      ctx.fillStyle = COLORS[index];
+      ctx.fillRect(left + columnIndex * cell + 1, top + rowIndex * cell + 1, cell - 3, cell - 3);
+    }));
+  }
+
+  private randomIndex(): number {
+    let value = this.rngState;
+    value ^= value << 13;
+    value ^= value >>> 17;
+    value ^= value << 5;
+    this.rngState = value >>> 0 || 1;
+    return this.rngState % SHAPES.length;
   }
 
   private lockPiece(): void {

@@ -44,6 +44,7 @@ export const meta: GameMeta = {
   description: 'Cross moving traffic, reach the top edge, and master harder patterns.',
   controls: 'Arrows or WASD move one cell per press · Action starts or retries',
   accent: '#f6d365',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Start'}, gestures: false },
 };
 
 export class RoadHopperGame implements Game {

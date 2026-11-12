@@ -16,6 +16,7 @@ export const meta: GameMeta = {
   description: 'Outplay the machine on a classic three-by-three grid.',
   controls: 'Use arrows to move the highlight, then press action to place a piece. Tap a cell to place.',
   accent: '#76f7ff',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Place'}, gestures: false },
 };
 
 const WIN_LINES: readonly (readonly [number, number, number])[] = [

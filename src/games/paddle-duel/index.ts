@@ -21,6 +21,7 @@ export const meta: GameMeta = {
   description: 'Outplay a quick opponent and reach seven points first.',
   controls: 'Move with Up/Down or W/S. Press A or Space to serve.',
   accent: '#72e6ff',
+  touchControls: { dpad: ['up', 'down'], buttons: ['action'], labels: {action: 'Serve'}, gestures: false },
 };
 
 export class PaddleDuelGame implements Game {

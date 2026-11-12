@@ -7,11 +7,14 @@ const CONTROL_KEYS: Record<string, ControlName> = {
   ArrowRight: 'right', KeyD: 'right', KeyL: 'right',
   Space: 'action', Enter: 'action', KeyZ: 'action',
   KeyX: 'secondary', KeyF: 'secondary', ShiftLeft: 'secondary', ShiftRight: 'secondary',
+  KeyC: 'hold',
 };
 
 export class InputManager implements InputApi {
+  private readonly sources = new Map<ControlName, Set<string>>();
   private readonly downControls = new Set<ControlName>();
   private readonly pressedControls = new Set<ControlName>();
+  private readonly pulseCounts = new Map<ControlName, number>();
   private active = false;
   private onPause: () => void = () => undefined;
   private onRestart: () => void = () => undefined;
@@ -20,6 +23,7 @@ export class InputManager implements InputApi {
     window.addEventListener('keydown', this.handleKeyDown, { passive: false });
     window.addEventListener('keyup', this.handleKeyUp);
     window.addEventListener('blur', this.clear);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
   setActive(active: boolean): void {
@@ -41,23 +45,44 @@ export class InputManager implements InputApi {
   }
 
   setButton(control: ControlName, isDown: boolean): void {
+    this.setSourceButton(control, 'legacy', isDown);
+  }
+
+  setSourceButton(control: ControlName, source: string, isDown: boolean): void {
+    let holders = this.sources.get(control);
+    if (!holders) {
+      holders = new Set<string>();
+      this.sources.set(control, holders);
+    }
     if (isDown) {
+      if (holders.has(source)) return;
+      holders.add(source);
       if (!this.downControls.has(control)) this.pressedControls.add(control);
       this.downControls.add(control);
-    } else {
+      return;
+    }
+    holders.delete(source);
+    if (holders.size === 0) {
+      this.sources.delete(control);
       this.downControls.delete(control);
     }
   }
 
   pulse(control: ControlName): void {
     this.pressedControls.add(control);
+    this.pulseCounts.set(control, (this.pulseCounts.get(control) ?? 0) + 1);
   }
 
   finishFrame(): void {
     this.pressedControls.clear();
   }
 
+  snapshot(): { down: ControlName[]; pressed: ControlName[]; pulses: Record<string, number> } {
+    return { down: [...this.downControls], pressed: [...this.pressedControls], pulses: Object.fromEntries(this.pulseCounts) };
+  }
+
   clear = (): void => {
+    this.sources.clear();
     this.downControls.clear();
     this.pressedControls.clear();
   };
@@ -67,7 +92,12 @@ export class InputManager implements InputApi {
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
     window.removeEventListener('blur', this.clear);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
+
+  private handleVisibilityChange = (): void => {
+    if (document.hidden) this.clear();
+  };
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     if (!this.active) return;
@@ -84,11 +114,11 @@ export class InputManager implements InputApi {
     const control = CONTROL_KEYS[event.code];
     if (!control) return;
     event.preventDefault();
-    if (!event.repeat) this.setButton(control, true);
+    this.setSourceButton(control, `key:${event.code}`, true);
   };
 
   private handleKeyUp = (event: KeyboardEvent): void => {
     const control = CONTROL_KEYS[event.code];
-    if (control) this.setButton(control, false);
+    if (control) this.setSourceButton(control, `key:${event.code}`, false);
   };
 }

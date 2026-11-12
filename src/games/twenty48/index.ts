@@ -7,6 +7,7 @@ export const meta: GameMeta = {
   description: 'Slide matching tiles, build momentum, and reach the summit.',
   controls: 'Use the arrows or WASD to slide tiles. Matching values merge.',
   accent: '#e8a95b',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: [], labels: {}, gestures: true },
 };
 
 const SIZE = 4;

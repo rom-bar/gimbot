@@ -147,6 +147,7 @@ export const meta: GameMeta = {
   description: 'Climb, dig, and gather every signal crystal across five compact ruins.',
   controls: 'Arrows or WASD move. X or B digs beside you. Reach the exit after collecting all crystals.',
   accent: '#ffbd59',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action', 'secondary'], labels: {action: 'Start', secondary: 'Dig'}, gestures: false },
 };
 
 type Enemy = { x: number; y: number; direction: number; timer: number };

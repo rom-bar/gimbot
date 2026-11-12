@@ -6,6 +6,7 @@ export const meta: GameMeta = {
   description: 'Find every pair and keep the pattern in mind.',
   controls: 'Arrows move the cursor. Action or tap flips a card.',
   accent: '#76f7ff',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Flip'}, gestures: false },
 };
 
 const WIDTH = 480;

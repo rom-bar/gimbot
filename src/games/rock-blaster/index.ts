@@ -42,6 +42,7 @@ export const meta: GameMeta = {
   description: 'Pilot a nimble ship, split drifting rocks, and clear each wave.',
   controls: 'Left/Right rotate · Up or A thrust · Space or action fire',
   accent: '#67e8f9',
+  touchControls: { dpad: ['up', 'left', 'right'], buttons: ['action', 'secondary'], labels: {action: 'Fire', secondary: 'Thrust'}, gestures: false },
 };
 
 export class RockBlasterGame implements Game {

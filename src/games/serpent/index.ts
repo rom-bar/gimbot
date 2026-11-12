@@ -32,6 +32,7 @@ export const meta: GameMeta = {
   description: 'Guide the growing serpent, collect fruit, and survive the grid.',
   controls: 'Arrow keys / WASD to move · Space / A to start',
   accent: '#6df4cf',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Start'}, gestures: false },
 };
 
 export function createSerpent(): Game {

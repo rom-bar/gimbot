@@ -6,6 +6,7 @@ export const meta: GameMeta = {
   description: 'Build four suit foundations from a shuffled deck.',
   controls: 'ACTION starts or selects. Arrows move highlight. Tap a card or pile to move it.',
   accent: '#e8c56a',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Select'}, gestures: false },
 };
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';

@@ -1,5 +1,15 @@
-export type ControlName = 'up' | 'down' | 'left' | 'right' | 'action' | 'secondary';
+export type ControlName = 'up' | 'down' | 'left' | 'right' | 'action' | 'secondary' | 'hold';
 export type GameStatus = 'ready' | 'playing' | 'paused' | 'over';
+export type DirectionControl = Extract<ControlName, 'up' | 'down' | 'left' | 'right'>;
+
+export interface TouchControlSpec {
+  dpad: DirectionControl[];
+  buttons: Array<Extract<ControlName, 'action' | 'secondary' | 'hold'>>;
+  optionalButtons?: Array<Extract<ControlName, 'action' | 'secondary' | 'hold'>>;
+  labels: Partial<Record<'action' | 'secondary' | 'hold', string>>;
+  gestures?: boolean;
+  hardDropOnFlick?: boolean;
+}
 
 export interface GameMeta {
   id: string;
@@ -7,6 +17,7 @@ export interface GameMeta {
   description: string;
   controls: string;
   accent: string;
+  touchControls: TouchControlSpec;
 }
 
 export interface InputApi {
@@ -52,6 +63,8 @@ export interface Game {
   destroy(): void;
   pause(): void;
   resume(): void;
+  getDebugState?(): Record<string, unknown>;
+  setSeed?(seed: number): void;
 }
 
 export interface GameEntry {

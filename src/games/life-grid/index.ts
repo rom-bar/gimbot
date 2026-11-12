@@ -20,6 +20,7 @@ export const meta: GameMeta = {
   description: 'Build a living pattern and watch simple rules make complex motion.',
   controls: 'Arrows move the cursor. Action starts or pauses. Secondary advances one generation.',
   accent: '#8effbd',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action', 'secondary'], labels: {action: 'Start', secondary: 'Step'}, gestures: false },
 };
 
 export class LifeGridGame implements Game {

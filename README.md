@@ -41,3 +41,23 @@ Create `src/games/<id>/index.ts` and implement the shared `Game` interface from 
 ## Legal note
 
 The games are original implementations of public-domain game mechanics. All visuals are drawn by the app, and all sound effects are synthesized locally with the Web Audio API.
+
+
+## Mobile controls and testing
+
+All games share the same pointer-based touch controls. Each game declares only the directions and actions it uses in its metadata. Direction buttons repeat after 150 ms (45 ms for left/right and 30 ms for Down), while action buttons trigger on pointer-down. The Controls panel saves Buttons/Gestures, target size, handedness, haptics, opacity, CRT and sound preferences on this device. Block Stack uses A to rotate, B to hard-drop, Down to soft-drop, and Left/Right to move; the optional Hold slot is off until enabled in Controls. It also shows a next-piece preview and landing ghost, with a 400 ms lock delay.
+
+For accessibility, zoom is not disabled in the page viewport. Touch scrolling, callouts, and context menus are suppressed only on the active game surface and touch controls; keyboard focus remains visible and reduced-motion preferences are respected.
+
+Run the tests with:
+
+```sh
+npm run test:unit
+npm run test:e2e
+```
+
+The Playwright suite builds the production preview with test-only hooks, then checks every game at 320×568, 360×740, 390×844, 740×360, 768×1024 and 1280×800. The deploy build is rebuilt without those hooks. Unit tests cover multi-source input release and repeat timing; E2E tests cover the shared layout, settings, Block Stack input, gestures, and desktop keyboard controls. See [the real-device checklist](docs/MANUAL_TEST.md) before relying on physical touch feel, and [the screenshot index](docs/screenshots/README.md) for visual evidence.
+
+### Layout and control decisions
+
+The default is Buttons mode with medium targets (60 px); small and large targets are 56 px and 68 px. Buttons and thumb zones have at least 12 px of separation. A size choice is clamped to the available width on very small screens, so targets stay within the viewport. Left-handed mode swaps the two thumb zones. Gestures are opt-in; Twenty48 keeps its existing swipe-first behavior. Hold-to-repeat uses a 150 ms initial delay, then 45 ms for Left/Right and 30 ms for Down. On-screen hints disappear after the first keyboard, touch-button, or gesture input and remain dismissed on this device.

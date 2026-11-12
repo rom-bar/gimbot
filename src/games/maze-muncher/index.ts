@@ -52,6 +52,7 @@ export const meta: GameMeta = {
   description: 'Clear a glowing maze, gather dots, and outsmart two slow sentries.',
   controls: 'Arrows / WASD move one tile · Space / A starts or restarts',
   accent: '#67f5c5',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Start'}, gestures: false },
 };
 
 export class MazeMuncherGame implements Game {

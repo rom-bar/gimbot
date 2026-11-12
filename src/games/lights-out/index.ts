@@ -18,6 +18,7 @@ export const meta: GameMeta = {
   description: 'Turn every light off with the fewest moves.',
   controls: 'Arrows move the highlight. Action toggles a cell and its neighbors.',
   accent: '#75f6ff',
+  touchControls: { dpad: ['up', 'down', 'left', 'right'], buttons: ['action'], labels: {action: 'Toggle'}, gestures: false },
 };
 
 export class LightsOutGame implements Game {
