@@ -16,6 +16,7 @@ import { createMemoryMatch, meta as memoryMatchMeta } from './games/memory-match
 import { createThreeInARow, meta as threeInARowMeta } from './games/three-in-a-row';
 import { createDiskReversal, meta as diskReversalMeta } from './games/disk-reversal';
 import { createCheckers, meta as checkersMeta } from './games/checkers';
+import { createWordGuess, meta as wordGuessMeta } from './games/word-guess';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -35,4 +36,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: threeInARowMeta, create: createThreeInARow },
   { meta: diskReversalMeta, create: createDiskReversal },
   { meta: checkersMeta, create: createCheckers },
+  { meta: wordGuessMeta, create: createWordGuess },
 ];
