@@ -18,6 +18,7 @@ import { createDiskReversal, meta as diskReversalMeta } from './games/disk-rever
 import { createCheckers, meta as checkersMeta } from './games/checkers';
 import { createWordGuess, meta as wordGuessMeta } from './games/word-guess';
 import { createCardSolitaire, meta as cardSolitaireMeta } from './games/card-solitaire';
+import { createLifeGrid, meta as lifeGridMeta } from './games/life-grid';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -39,4 +40,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: checkersMeta, create: createCheckers },
   { meta: wordGuessMeta, create: createWordGuess },
   { meta: cardSolitaireMeta, create: createCardSolitaire },
+  { meta: lifeGridMeta, create: createLifeGrid },
 ];
