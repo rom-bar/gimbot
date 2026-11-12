@@ -14,6 +14,7 @@ import { createSlidingTiles, meta as slidingTilesMeta } from './games/sliding-ti
 import { createLightsOut, meta as lightsOutMeta } from './games/lights-out';
 import { createMemoryMatch, meta as memoryMatchMeta } from './games/memory-match';
 import { createThreeInARow, meta as threeInARowMeta } from './games/three-in-a-row';
+import { createDiskReversal, meta as diskReversalMeta } from './games/disk-reversal';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -31,4 +32,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: lightsOutMeta, create: createLightsOut },
   { meta: memoryMatchMeta, create: createMemoryMatch },
   { meta: threeInARowMeta, create: createThreeInARow },
+  { meta: diskReversalMeta, create: createDiskReversal },
 ];
