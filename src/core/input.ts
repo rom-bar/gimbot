@@ -15,6 +15,7 @@ export class InputManager implements InputApi {
   private readonly downControls = new Set<ControlName>();
   private readonly pressedControls = new Set<ControlName>();
   private readonly pulseCounts = new Map<ControlName, number>();
+  private readonly pendingPulses = new Map<ControlName, number>();
   private active = false;
   private onPause: () => void = () => undefined;
   private onRestart: () => void = () => undefined;
@@ -41,6 +42,12 @@ export class InputManager implements InputApi {
   }
 
   pressed(control: ControlName): boolean {
+    const pending = this.pendingPulses.get(control) ?? 0;
+    if (pending > 0) {
+      if (pending === 1) this.pendingPulses.delete(control);
+      else this.pendingPulses.set(control, pending - 1);
+      return true;
+    }
     return this.pressedControls.has(control);
   }
 
@@ -71,6 +78,7 @@ export class InputManager implements InputApi {
   pulse(control: ControlName): void {
     this.pressedControls.add(control);
     this.pulseCounts.set(control, (this.pulseCounts.get(control) ?? 0) + 1);
+    this.pendingPulses.set(control, Math.min(32, (this.pendingPulses.get(control) ?? 0) + 1));
   }
 
   finishFrame(): void {
@@ -85,6 +93,7 @@ export class InputManager implements InputApi {
     this.sources.clear();
     this.downControls.clear();
     this.pressedControls.clear();
+    this.pendingPulses.clear();
   };
 
   destroy(): void {

@@ -27,6 +27,7 @@ export interface InputApi {
 
 export interface AudioApi {
   readonly muted: boolean;
+  setMuted(muted: boolean): void;
   tone(frequency: number, durationMs?: number, waveform?: OscillatorType, volume?: number): void;
 }
 
@@ -53,6 +54,7 @@ export interface GameContext {
   storage: StorageApi;
   score: ScoreApi;
   setStatus(status: GameStatus): void;
+  setStats(lines: number, level: number): void;
 }
 
 export interface Game {

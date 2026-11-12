@@ -2,7 +2,7 @@ export class HoldRepeater {
   private initialTimer: number | null = null;
   private repeatTimer: number | null = null;
 
-  start(onRepeat: () => void, initialDelay = 150, interval = 45): void {
+  start(onRepeat: () => void, initialDelay = 140, interval = 40): void {
     this.stop();
     this.initialTimer = window.setTimeout(() => {
       onRepeat();

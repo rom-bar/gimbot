@@ -1,0 +1,57 @@
+{
+  "320x568": {
+    "cellSize": 24,
+    "boardX": 39,
+    "boardY": 2,
+    "boardWidth": 240,
+    "boardHeight": 480,
+    "canvasWidth": 318,
+    "canvasHeight": 484,
+    "stageWidth": 320,
+    "stageHeight": 486
+  },
+  "360x740": {
+    "cellSize": 32,
+    "boardX": 19,
+    "boardY": 8,
+    "boardWidth": 320,
+    "boardHeight": 640,
+    "canvasWidth": 358,
+    "canvasHeight": 656,
+    "stageWidth": 360,
+    "stageHeight": 658
+  },
+  "390x844": {
+    "cellSize": 38,
+    "boardX": 4,
+    "boardY": 0,
+    "boardWidth": 380,
+    "boardHeight": 760,
+    "canvasWidth": 388,
+    "canvasHeight": 760,
+    "stageWidth": 390,
+    "stageHeight": 762
+  },
+  "412x915": {
+    "cellSize": 41,
+    "boardX": 0,
+    "boardY": 5,
+    "boardWidth": 410,
+    "boardHeight": 820,
+    "canvasWidth": 410,
+    "canvasHeight": 831,
+    "stageWidth": 412,
+    "stageHeight": 833
+  },
+  "740x360": {
+    "cellSize": 14,
+    "boardX": 37,
+    "boardY": 2,
+    "boardWidth": 140,
+    "boardHeight": 280,
+    "canvasWidth": 215,
+    "canvasHeight": 284,
+    "stageWidth": 217,
+    "stageHeight": 286
+  }
+}

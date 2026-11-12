@@ -3,7 +3,6 @@ import { clearLines, rotateMatrix } from './logic';
 
 const WIDTH = 10;
 const HEIGHT = 20;
-const CELL = 28;
 const BOARD_X = 48;
 const BOARD_Y = 34;
 const COLORS = ['#53e0c2', '#ffcb6b', '#ff6b8a', '#a98bff', '#65b7ff', '#ff9966', '#d7f171'];
@@ -39,6 +38,12 @@ export class BlockStackGame implements Game {
   private canvas: HTMLCanvasElement | null = null;
   private context: GameContext | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private canvasWidth = 480;
+  private canvasHeight = 640;
+  private cellSize = 28;
+  private boardX = BOARD_X;
+  private boardY = BOARD_Y;
   private board = blankBoard();
   private piece: number[][] | null = null;
   private pieceColor = 0;
@@ -58,6 +63,10 @@ export class BlockStackGame implements Game {
     this.canvas = canvas;
     this.context = context;
     this.ctx = canvas.getContext('2d');
+    this.resizeObserver = new ResizeObserver(this.resizeCanvas);
+    if (canvas.parentElement) this.resizeObserver.observe(canvas.parentElement);
+    window.addEventListener('resize', this.resizeCanvas);
+    this.resizeCanvas();
     this.reset();
     context.setStatus('ready');
   }
@@ -98,35 +107,19 @@ export class BlockStackGame implements Game {
     const ctx = this.ctx;
     const canvas = this.canvas;
     if (!ctx || !canvas) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.resizeCanvas();
+    ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     ctx.fillStyle = '#100d20';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
     this.drawBoard(ctx);
     this.drawGhost(ctx);
     this.drawPiece(ctx);
-    ctx.fillStyle = '#302747';
-    ctx.font = '700 14px monospace';
-    ctx.fillText('LINES', 358, 76);
-    ctx.fillStyle = '#f7f1ff';
-    ctx.font = '700 28px monospace';
-    ctx.fillText(String(this.lines).padStart(2, '0'), 358, 108);
-    ctx.fillStyle = '#302747';
-    ctx.font = '700 14px monospace';
-    ctx.fillText('LEVEL', 358, 156);
-    ctx.fillStyle = '#f7f1ff';
-    ctx.font = '700 28px monospace';
-    ctx.fillText(String(this.level), 358, 188);
-    ctx.fillStyle = '#6d6085';
-    ctx.font = '12px monospace';
-    ctx.fillText('← → MOVE', 358, 254);
-    ctx.fillText('A ROTATE', 358, 274);
-    ctx.fillText('B DROP', 358, 294);
-    this.drawPreview(ctx, 'NEXT', this.nextShapeIndex, 358, 360);
+    this.drawPreview(ctx, 'HOLD', this.heldShapeIndex, 6, 7, 64);
+    this.drawPreview(ctx, 'NEXT', this.nextShapeIndex, this.canvasWidth - 70, 7, 64);
     if (this.context?.storage.getBoolean('touch:hold-piece', false)) {
-      this.drawPreview(ctx, 'HOLD', this.heldShapeIndex, 358, 478);
-      ctx.fillStyle = this.holdUsed ? '#514361' : '#6d6085';
-      ctx.font = '11px monospace';
-      ctx.fillText('C / H', 358, 548);
+      ctx.fillStyle = this.holdUsed ? '#716785' : '#c4b8d9';
+      ctx.font = '8px monospace';
+      ctx.fillText(this.holdUsed ? 'USED' : 'READY', 6, 34);
     }
   }
 
@@ -134,6 +127,9 @@ export class BlockStackGame implements Game {
   resume(): void {}
 
   destroy(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    window.removeEventListener('resize', this.resizeCanvas);
     this.canvas = null;
     this.context = null;
     this.ctx = null;
@@ -150,6 +146,11 @@ export class BlockStackGame implements Game {
       heldShapeIndex: this.heldShapeIndex,
       holdUsed: this.holdUsed,
       lines: this.lines,
+      cellSize: this.cellSize,
+      boardX: this.boardX,
+      boardY: this.boardY,
+      boardWidth: WIDTH * this.cellSize,
+      boardHeight: HEIGHT * this.cellSize,
       board: this.board.map((row) => [...row]),
     };
   }
@@ -177,7 +178,28 @@ export class BlockStackGame implements Game {
     this.lockResets = 0;
     this.lines = 0;
     this.started = false;
+    this.context?.setStats(0, 1);
   }
+
+  private resizeCanvas = (): void => {
+    const canvas = this.canvas;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, canvas.clientWidth || rect.width || 480);
+    const height = Math.max(1, canvas.clientHeight || rect.height || 640);
+    const scale = Math.max(1, window.devicePixelRatio || 1);
+    const backingWidth = Math.round(width * scale);
+    const backingHeight = Math.round(height * scale);
+    if (canvas.width !== backingWidth) canvas.width = backingWidth;
+    if (canvas.height !== backingHeight) canvas.height = backingHeight;
+    this.canvasWidth = width;
+    this.canvasHeight = height;
+    this.cellSize = Math.max(1, Math.floor(Math.min(width / WIDTH, height / HEIGHT)));
+    this.boardX = Math.floor((width - WIDTH * this.cellSize) / 2);
+    this.boardY = Math.floor((height - HEIGHT * this.cellSize) / 2);
+    this.ctx = canvas.getContext('2d');
+    this.ctx?.setTransform(scale, 0, 0, scale, 0, 0);
+  };
 
   private spawn(): void {
     const index = this.nextShapeIndex;
@@ -272,7 +294,7 @@ export class BlockStackGame implements Game {
   }
 
   private resetLockDelay(): void {
-    if (this.lockResets >= 15) return;
+    if (this.lockResets >= 10) return;
     this.lockTimer = 0;
     this.lockResets += 1;
   }
@@ -290,23 +312,23 @@ export class BlockStackGame implements Game {
     if (y <= this.pieceY) return;
     this.piece.forEach((row, rowIndex) => row.forEach((cell, columnIndex) => {
       if (!cell) return;
-      const x = BOARD_X + (this.pieceX + columnIndex) * CELL;
-      const py = BOARD_Y + (y + rowIndex) * CELL;
+      const x = this.boardX + (this.pieceX + columnIndex) * this.cellSize;
+      const py = this.boardY + (y + rowIndex) * this.cellSize;
       ctx.strokeStyle = `${COLORS[this.pieceColor]}88`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 4, py + 4, CELL - 8, CELL - 8);
+      ctx.lineWidth = Math.max(1, this.cellSize / 14);
+      ctx.strokeRect(x + 3, py + 3, this.cellSize - 6, this.cellSize - 6);
     }));
   }
 
-  private drawPreview(ctx: CanvasRenderingContext2D, label: string, index: number | null, x: number, y: number): void {
-    ctx.fillStyle = '#6d6085';
-    ctx.font = '700 12px monospace';
-    ctx.fillText(label, x, y);
+  private drawPreview(ctx: CanvasRenderingContext2D, label: string, index: number | null, x: number, y: number, regionWidth: number): void {
+    ctx.fillStyle = '#b4a8cb';
+    ctx.font = '700 8px monospace';
+    ctx.fillText(label, x, y + 7);
     if (index === null) return;
     const shape = SHAPES[index];
-    const cell = 15;
-    const left = x + (92 - shape[0].length * cell) / 2;
-    const top = y + 12;
+    const cell = 7;
+    const left = x + (regionWidth - shape[0].length * cell) / 2;
+    const top = y + 10;
     shape.forEach((row, rowIndex) => row.forEach((occupied, columnIndex) => {
       if (!occupied) return;
       ctx.fillStyle = COLORS[index];
@@ -334,6 +356,7 @@ export class BlockStackGame implements Game {
     this.board = result.board;
     if (result.cleared > 0) {
       this.lines += result.cleared;
+      this.context?.setStats(this.lines, this.level);
       this.context?.score.add(100 * result.cleared * result.cleared);
       this.context?.audio.tone(760 + result.cleared * 70, 100, 'triangle', 0.06);
     } else {
@@ -348,14 +371,14 @@ export class BlockStackGame implements Game {
     ctx.lineWidth = 1;
     for (let x = 0; x <= WIDTH; x += 1) {
       ctx.beginPath();
-      ctx.moveTo(BOARD_X + x * CELL, BOARD_Y);
-      ctx.lineTo(BOARD_X + x * CELL, BOARD_Y + HEIGHT * CELL);
+      ctx.moveTo(this.boardX + x * this.cellSize, this.boardY);
+      ctx.lineTo(this.boardX + x * this.cellSize, this.boardY + HEIGHT * this.cellSize);
       ctx.stroke();
     }
     for (let y = 0; y <= HEIGHT; y += 1) {
       ctx.beginPath();
-      ctx.moveTo(BOARD_X, BOARD_Y + y * CELL);
-      ctx.lineTo(BOARD_X + WIDTH * CELL, BOARD_Y + y * CELL);
+      ctx.moveTo(this.boardX, this.boardY + y * this.cellSize);
+      ctx.lineTo(this.boardX + WIDTH * this.cellSize, this.boardY + y * this.cellSize);
       ctx.stroke();
     }
     this.board.forEach((row, y) => row.forEach((cell, x) => {
@@ -371,14 +394,14 @@ export class BlockStackGame implements Game {
   }
 
   private drawCell(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
-    const px = BOARD_X + x * CELL;
-    const py = BOARD_Y + y * CELL;
+    const px = this.boardX + x * this.cellSize;
+    const py = this.boardY + y * this.cellSize;
     ctx.fillStyle = color;
-    ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
+    ctx.fillRect(px + 2, py + 2, this.cellSize - 4, this.cellSize - 4);
     ctx.fillStyle = 'rgba(255,255,255,0.28)';
-    ctx.fillRect(px + 4, py + 4, CELL - 8, 3);
+    ctx.fillRect(px + 4, py + 4, this.cellSize - 8, Math.max(2, this.cellSize / 10));
     ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(px + 4, py + CELL - 7, CELL - 8, 3);
+    ctx.fillRect(px + 4, py + this.cellSize - 7, this.cellSize - 8, Math.max(2, this.cellSize / 10));
   }
 }
 

@@ -38,7 +38,9 @@ export class ArcadeStorage implements StorageApi {
   }
 
   getNumber(key: string, fallback = 0): number {
-    const value = Number(read(`data:${key}`));
+    const stored = read(`data:${key}`);
+    if (stored === null) return fallback;
+    const value = Number(stored);
     return Number.isFinite(value) ? value : fallback;
   }
 

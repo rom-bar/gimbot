@@ -18,16 +18,16 @@ const storage = new ArcadeStorage();
 const audio = new ArcadeAudio(storage);
 let controller: ReturnType<typeof mountGame> | null = null;
 
-function shellHeader(isGame: boolean): string {
+function shellHeader(): string {
   const crt = storage.getBoolean('crt', true);
   return `
-    <header class="site-header ${isGame ? 'compact-header' : ''}">
+    <header class="site-header">
       <a class="brand" href="#/" aria-label="Retro Arcade home">
         <span class="brand-mark" aria-hidden="true">R</span>
         <span class="brand-name">Retro<br />Arcade</span>
       </a>
       <nav class="header-actions" aria-label="Site settings">
-        ${isGame ? '' : '<a class="quiet-button about-link" href="#/about">About</a>'}
+        <a class="quiet-button about-link" href="#/about">About</a>
         <button class="quiet-button setting-button" id="crt-toggle" type="button" aria-pressed="${crt}"><span class="toggle-dot" aria-hidden="true"></span><span>CRT ${crt ? 'on' : 'off'}</span></button>
         <button class="quiet-button setting-button" id="sound-toggle" type="button" aria-pressed="${!audio.muted}" aria-label="${audio.muted ? 'Turn sound on' : 'Mute sound'}"><span class="sound-glyph" aria-hidden="true">${audio.muted ? '♪' : '♫'}</span><span>${audio.muted ? 'Sound off' : 'Sound on'}</span></button>
       </nav>
@@ -50,7 +50,7 @@ function render(): void {
   else page = renderHome(gameRegistry, storage);
 
   document.title = entry ? `${entry.meta.title} — Retro Arcade` : route.type === 'about' ? 'About — Retro Arcade' : 'Retro Arcade — one more round';
-  root.innerHTML = `<div class="app-frame ${isGame ? 'game-frame' : ''}">${shellHeader(isGame)}<main id="main-content" class="main-content ${isGame ? 'game-main' : ''}" tabindex="-1">${page}</main>${isGame ? '' : '<footer class="site-footer"><span>Made for the next free minute.</span><span>Offline-ready · no account</span></footer>'}</div>`;
+  root.innerHTML = `<div class="app-frame ${isGame ? 'game-frame' : ''}">${isGame ? '' : shellHeader()}<main id="main-content" class="main-content ${isGame ? 'game-main' : ''}" tabindex="-1">${page}</main>${isGame ? '' : '<footer class="site-footer"><span>Made for the next free minute.</span><span>Offline-ready · no account</span></footer>'}</div>`;
   document.documentElement.dataset.crt = storage.getBoolean('crt', true) ? 'on' : 'off';
 
   document.querySelector<HTMLButtonElement>('#crt-toggle')?.addEventListener('click', () => {

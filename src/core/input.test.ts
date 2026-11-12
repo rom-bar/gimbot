@@ -40,33 +40,38 @@ describe('InputManager sources', () => {
     input.pulse('right');
     input.pulse('right');
     expect(input.snapshot().pulses.right).toBe(2);
+    expect(input.pressed('right')).toBe(true);
+    input.finishFrame();
+    expect(input.pressed('right')).toBe(true);
+    input.finishFrame();
+    expect(input.pressed('right')).toBe(false);
   });
 });
 
 describe('HoldRepeater timing', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('waits 150ms, then repeats at the configured interval', () => {
+  it('waits 140ms, then repeats at the configured interval', () => {
     vi.useFakeTimers();
     const callback = vi.fn();
     const repeater = new HoldRepeater();
-    repeater.start(callback, 150, 45);
-    vi.advanceTimersByTime(149);
+    repeater.start(callback, 140, 40);
+    vi.advanceTimersByTime(139);
     expect(callback).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(callback).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(44);
+    vi.advanceTimersByTime(39);
     expect(callback).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(1);
     expect(callback).toHaveBeenCalledTimes(2);
-    vi.advanceTimersByTime(90);
+    vi.advanceTimersByTime(80);
     expect(callback).toHaveBeenCalledTimes(4);
     repeater.stop();
     vi.advanceTimersByTime(500);
     expect(callback).toHaveBeenCalledTimes(4);
   });
 
-  it('supports the faster soft-drop interval', () => {
+  it('supports the faster 30ms soft-drop interval', () => {
     vi.useFakeTimers();
     const callback = vi.fn();
     const repeater = new HoldRepeater();
