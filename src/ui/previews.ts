@@ -10,12 +10,12 @@ const painters: Record<string, PreviewPainter> = {
     context.fillStyle = '#fff';
     context.fillRect(47, 48, 2, 2);
   },
-  blockStack(context) {
+  'block-stack'(context) {
     background(context);
     const cells: [number, number, string][] = [[24, 24, '#aa8cff'], [32, 24, '#aa8cff'], [40, 24, '#aa8cff'], [32, 32, '#aa8cff'], [40, 40, '#ffd36d'], [48, 40, '#ffd36d'], [48, 48, '#ffd36d'], [56, 48, '#ffd36d']];
     cells.forEach(([x, y, color]) => { context.fillStyle = color; context.fillRect(x, y, 7, 7); });
   },
-  brickSmash(context) {
+  'brick-smash'(context) {
     background(context);
     const colors = ['#ff74bd', '#ffd36d', '#6df4cf'];
     for (let row = 0; row < 3; row += 1) {
@@ -46,7 +46,7 @@ const painters: Record<string, PreviewPainter> = {
       }
     }
   },
-  mineSweep(context) {
+  'mine-sweep'(context) {
     background(context);
     for (let row = 0; row < 5; row += 1) {
       for (let column = 0; column < 5; column += 1) {

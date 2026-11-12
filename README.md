@@ -2,6 +2,10 @@
 
 A small, original arcade cabinet for the browser. It is a static Vite + TypeScript app with no runtime dependencies, and it is designed to keep working offline as a PWA.
 
+## Phase one games
+
+Serpent, Block Stack, Brick Smash, Twenty48, and Mine Sweep. All game art is drawn with Canvas 2D and scores stay in local storage.
+
 **Live cabinet:** https://rom-bar.github.io/gimbot/
 
 ## Run it locally
@@ -17,6 +21,8 @@ Build and preview the static output:
 npm run build
 npm run preview
 ```
+
+Run the pure-logic unit tests with `npm test`.
 
 The build uses `/gimbot/` as its default base path. Set `BASE_PATH` to the deployment subpath when building for another repository.
 
