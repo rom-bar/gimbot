@@ -15,6 +15,7 @@ import { createLightsOut, meta as lightsOutMeta } from './games/lights-out';
 import { createMemoryMatch, meta as memoryMatchMeta } from './games/memory-match';
 import { createThreeInARow, meta as threeInARowMeta } from './games/three-in-a-row';
 import { createDiskReversal, meta as diskReversalMeta } from './games/disk-reversal';
+import { createCheckers, meta as checkersMeta } from './games/checkers';
 
 export const gameRegistry: GameEntry[] = [
   { meta: serpentMeta, create: createSerpent },
@@ -33,4 +34,5 @@ export const gameRegistry: GameEntry[] = [
   { meta: memoryMatchMeta, create: createMemoryMatch },
   { meta: threeInARowMeta, create: createThreeInARow },
   { meta: diskReversalMeta, create: createDiskReversal },
+  { meta: checkersMeta, create: createCheckers },
 ];
